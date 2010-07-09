@@ -16,15 +16,18 @@ object constantconverter extends RewriteRule {
       }).foldLeft("")((a, b) => a + b)
       val enot = """([\+\-]?[0-9]+(\.[0-9]+)?)[Ee]([\+\-]?[0-9]+(\.[0-9]+)?)""".r
       txt match {
-        case enot(mantissa, _, exponent, _) => Elem(pre, n.label, att, scope, Text(mantissa) ++ Elem(n.prefix, "sep", null, n.scope) ++ Text(exponent) ++ nod: _*)
+        case enot(mantissa, _, exponent, _) => {
+          Elem(pre, n.label, att.append(new UnprefixedAttribute("type", "e-notation", Null)), scope, Text(mantissa) ++ Elem(n.prefix, "sep", null, n.scope) ++ Text(exponent) ++ nod: _*)
+        }
         case _ => Text("")
       }
     }
+    case otherwise => otherwise
   }
   def main(args: Array[String]) = {
     for(file <- args) {
       var doc = XML.load(file)
-      val fdoc = transform(doc)
+      val fdoc = new RuleTransformer(constantconverter).transform(doc).head
       println(fdoc)
       //XML.save(file, fdoc)
     }
