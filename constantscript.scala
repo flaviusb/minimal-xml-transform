@@ -28,8 +28,8 @@ object constantconverter extends RewriteRule {
     for(file <- args) {
       var doc = XML.load(file)
       val fdoc = new RuleTransformer(constantconverter).transform(doc).head
-      println(fdoc)
-      //XML.save(file, fdoc)
+      //println(fdoc)
+      XML.save(file, fdoc)
     }
   }
 }
