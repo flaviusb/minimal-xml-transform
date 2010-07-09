@@ -19,7 +19,7 @@ object constantconverter extends RewriteRule {
         case enot(mantissa, _, exponent, _) => {
           Elem(pre, n.label, att.append(new UnprefixedAttribute("type", "e-notation", Null)), scope, Text(mantissa) ++ Elem(n.prefix, "sep", null, n.scope) ++ Text(exponent) ++ nod: _*)
         }
-        case _ => Text("")
+        case _ => n
       }
     }
     case otherwise => otherwise
