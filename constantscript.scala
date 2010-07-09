@@ -14,7 +14,7 @@ object constantconverter extends RewriteRule {
         case Text(t) => true;
         case a => false
       }).foldLeft("")((a, b) => a + b)
-      val enot = """([\+\-]?[0-9]+(\.[0-9]+)?)[Ee]([\+\-]?[0-9]+(\.[0-9]+)?)""".r
+      val enot = """\w*([\+\-]?[0-9]+(\.[0-9]+)?)[Ee]([\+\-]?[0-9]+(\.[0-9]+)?)\w*""".r
       txt match {
         case enot(mantissa, _, exponent, _) => {
           Elem(pre, n.label, att.append(new UnprefixedAttribute("type", "e-notation", Null)), scope, Text(mantissa) ++ Elem(n.prefix, "sep", null, n.scope) ++ Text(exponent) ++ nod: _*)
