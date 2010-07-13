@@ -75,7 +75,6 @@ object constantconverter extends RewriteRule {
         }
     }
   }
-
   def sequenceToXML(
     children: Seq[Node],
     pscope: NamespaceBinding = TopScope,
@@ -98,16 +97,31 @@ object constantconverter extends RewriteRule {
     }
     else children foreach { toXML(_, pscope, sb, stripComments, decodeEntities, preserveWhitespace, minimizeTags) }
   } 
-  final def write(w: java.io.Writer, node: Node) {
-    w.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-    w.write(toXML(node, preserveWhitespace=true, minimizeTags=true).toString)
+  final def write(w: java.io.Writer, node: Seq[Node]) {
+    node.foreach(n => w.write(toXML(n, preserveWhitespace=true, minimizeTags=true).toString))
   }
   def main(args: Array[String]) = {
     for(file <- args) {
-      var doc = XML.load(file)
-      val fdoc = new RuleTransformer(constantconverter).transform(doc).head
+      val cpa = scala.xml.parsing.ConstructingParser.fromFile(new File(file), true)
+      var info_prolog: Tuple3[Option[String], Option[String], Option[Boolean]] = Tuple3(None, None, None)
+      cpa.nextch // is prolog ?
+      var children: NodeSeq = null
+      if ('?' == cpa.ch) {
+        cpa.nextch;
+        info_prolog = cpa.prolog()
+
+        children = cpa.content(TopScope) // DTD handled as side effect
+      }
+      else {
+        val ts = new NodeBuffer();
+        cpa.content1(TopScope, ts); // DTD handled as side effect
+        ts &+ cpa.content(TopScope);
+        children = NodeSeq.fromSeq(ts);
+      }
+      val fdoc = new RuleTransformer(constantconverter).transform(children)
       val fos = new FileOutputStream(file)
-      val w = Channels.newWriter(fos.getChannel(), "utf-8")
+      val w = Channels.newWriter(fos.getChannel(), info_prolog._2.getOrElse("utf-8"))
+      w.write("<?xml version=\""+info_prolog._1.getOrElse("1.0")+"\" encoding=\""+info_prolog._2.getOrElse("utf-8")+"\"?>\n")
       ultimately(w.close())(write(w, fdoc))
     }
   }
