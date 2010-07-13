@@ -16,7 +16,7 @@ object constantconverter extends RewriteRule {
         case Text(t) => true;
         case a => false
       }).foldLeft("")((a, b) => a + b)
-      val enot = """\w*([\+\-]?[0-9]+(\.[0-9]+)?)[Ee]([\+\-]?[0-9]+(\.[0-9]+)?)\w*""".r
+      val enot = """\W*([\-+]?[0-9]+(\.[0-9]+)?)[Ee]([\-+]?[0-9]+(\.[0-9]+)?)\W*""".r
       txt match {
         case enot(mantissa, _, exponent, _) => {
           Elem(pre, n.label, att.append(new UnprefixedAttribute("type", "e-notation", Null)), scope, Text(mantissa) ++ Elem(n.prefix, "sep", null, n.scope) ++ Text(exponent) ++ nod: _*)
@@ -37,7 +37,7 @@ object constantconverter extends RewriteRule {
       }
       mde.copy(attributes=reverse(scala.xml.Null, mde.attributes))
     }
-    case otherwise => otherwise
+    case (otherwise: Node) => otherwise
   }
   // Epic yak shaving
   def isAtomAndNotText(x: Node) = x.isAtom && !x.isInstanceOf[Text]
