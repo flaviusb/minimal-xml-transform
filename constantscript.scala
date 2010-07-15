@@ -39,6 +39,25 @@ object fixer {
         mde.copy(attributes=reverse(scala.xml.Null, mde.attributes))
       }
       case (otherwise: Node) => otherwise
+    }
+  }
+  object xmlbaseremover extends RewriteRule {
+    override def transform(node: Node) = node match {
+      case (elem: Elem) => {
+        val att = elem.attributes
+        // If there is an xml:base, then if it is "" or a file url, remove it
+        val base = att.get("xml", TopScope, "base")
+        if (base == None) {
+          elem
+        } else if (base != Some("")) {
+          val fileuri = "file:.*".r 
+          base.getOrElse("") match {
+            case fileuri() => elem.copy(attributes=att.remove("xml", TopScope, "base"))
+            case _ => elem
+          }
+        } else {
+          elem.copy(attributes=att.remove("xml", TopScope, "base"))
+        }
       }
       case (otherwise: Node) => otherwise
     }
