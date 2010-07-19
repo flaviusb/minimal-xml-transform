@@ -24,11 +24,24 @@ object fixer {
           case a => false
         }).foldLeft("")((a, b) => a + b)
         val enot = """\W*([\-+]?[0-9]+(\.[0-9]+)?)[Ee]([\-+]?[0-9]+(\.[0-9]+)?)\W*""".r
-        txt match {
+        val int = txt match {
           case enot(mantissa, _, exponent, _) => {
-            Elem(pre, n.label, att.append(new UnprefixedAttribute("type", "e-notation", Null)), scope, Text(mantissa) ++ Elem(n.prefix, "sep", null, n.scope) ++ Text(exponent) ++ nod: _*)
+            Elem(pre, n.label, new UnprefixedAttribute("type", "e-notation", new WhiteSpace(" ", att)), scope, Text(mantissa) ++ Elem(n.prefix, "sep", null, n.scope) ++ Text(exponent) ++ nod: _*)
           }
           case _ => n
+        }
+        def reverse(first: MetaData, next: MetaData): MetaData = {
+          // First time through is null, first
+          // Last time through is last, null
+          if (next == null || next == scala.xml.Null)
+            return first;
+
+          val intermediate = next.copy(first)
+          reverse(intermediate, next.next)
+        }
+        int match {
+          case i: Elem => i.copy(attributes=reverse(scala.xml.Null, i.attributes))
+          case j => j
         }
       }
       case (mde: Elem) => {
@@ -70,6 +83,12 @@ object fixer {
   }
   // Epic yak shaving
   def isAtomAndNotText(x: Node) = x.isAtom && !x.isInstanceOf[Text]
+  def buildAttrString(m: MetaData, sb: StringBuilder): Unit = {
+    if (m != null && m != Null) {
+      m.toString1(sb)
+      buildAttrString(m.next, sb)
+    }
+  }
   def toXML(
     x: Node,
     pscope: NamespaceBinding = TopScope,
@@ -89,7 +108,7 @@ object fixer {
         // print tag with namespace declarations
         sb.append('<')
         x.nameToString(sb)
-        if (x.attributes ne null) x.attributes.buildString(sb)
+        if (x.attributes ne null) buildAttrString(x.attributes, sb)
         x.scope.buildString(sb, pscope)
         if (x.child.isEmpty && minimizeTags) {
           // no children, so use short form: <xyz .../>
