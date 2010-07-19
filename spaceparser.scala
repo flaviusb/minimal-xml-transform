@@ -26,7 +26,7 @@ class SpaceParser(override val input: Source, override val preserveWS: Boolean) 
   override def mkAttributes(name: String, pscope: NamespaceBinding) =
     if (isNameStart(ch) || isSpace(ch)) xAttributes2(pscope)
     else (Null, pscope)
-  
+ 
   /** parse attribute and create namespace scope, metadata
    *  [41] Attributes    ::= { S Name Eq AttValue }
    */
@@ -34,7 +34,7 @@ class SpaceParser(override val input: Source, override val preserveWS: Boolean) 
     var scope: NamespaceBinding = pscope
     var aMap: MetaData = Null
     if (isSpace(ch))
-      aMap = new WhiteSpace(xSpaceS, aMap); 
+      aMap = WhiteSpace(xSpaceS, aMap); 
     while (isNameStart(ch)) {
       val pos = this.pos
 
@@ -59,7 +59,10 @@ class SpaceParser(override val input: Source, override val preserveWS: Boolean) 
       }
             
       if (isSpace(ch))
-        aMap = new WhiteSpace(xSpaceS, aMap); 
+        aMap = aMap match {
+          case coalesce: WhiteSpace => { xSpaceS; coalesce }
+          case other => WhiteSpace(xSpaceS, other)
+        } 
     }
 
     if(!aMap.wellformed(scope))

@@ -20,6 +20,7 @@ import annotation.tailrec
  *  sort of a linked list of tails.
  */
 case class WhiteSpace(space: String, override val next: MetaData) extends MetaData {    
+  def this(space: String, next: WhiteSpace) = this(next.space, next.next)
   def copy(next: MetaData) = WhiteSpace(space, next)
   def getNamespace(owner: Node) = null
 
@@ -54,6 +55,9 @@ case class WhiteSpace(space: String, override val next: MetaData) extends MetaDa
   def remove(namespace: String, scope: NamespaceBinding, key: String) = this
 }
 
+object WhiteSpace {
+  def apply(space: String, next: WhiteSpace) = next
+}
 trait whitespaceRootPatch {
   self: MetaData =>
   /**

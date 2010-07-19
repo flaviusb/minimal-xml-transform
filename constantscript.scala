@@ -26,7 +26,7 @@ object fixer {
         val enot = """\W*([\-+]?[0-9]+(\.[0-9]+)?)[Ee]([\-+]?[0-9]+(\.[0-9]+)?)\W*""".r
         val int = txt match {
           case enot(mantissa, _, exponent, _) => {
-            Elem(pre, n.label, new UnprefixedAttribute("type", "e-notation", new WhiteSpace(" ", att)), scope, Text(mantissa) ++ Elem(n.prefix, "sep", null, n.scope) ++ Text(exponent) ++ nod: _*)
+            Elem(pre, n.label, new UnprefixedAttribute("type", "e-notation", WhiteSpace(" ", att)), scope, Text(mantissa) ++ Elem(n.prefix, "sep", null, n.scope) ++ Text(exponent) ++ nod: _*)
           }
           case _ => n
         }
@@ -89,6 +89,20 @@ object fixer {
       buildAttrString(m.next, sb)
     }
   }
+  def buildNSString(ns: NamespaceBinding, sb: StringBuilder, stop: NamespaceBinding): Unit = {
+    if (ns eq stop) return    // contains?
+
+    val s = "xmlns%s=\"%s\"".format(
+      (if (ns.prefix != null) ":" + ns.prefix else ""),
+      (if (ns.uri != null) ns.uri else "")
+    )
+    sb append s
+    if (ns.parent != stop) {
+      sb append " "
+      buildNSString(ns.parent, sb, stop)
+    }
+  }
+
   def toXML(
     x: Node,
     pscope: NamespaceBinding = TopScope,
@@ -109,7 +123,7 @@ object fixer {
         sb.append('<')
         x.nameToString(sb)
         if (x.attributes ne null) buildAttrString(x.attributes, sb)
-        x.scope.buildString(sb, pscope)
+        buildNSString(x.scope, sb, pscope)
         if (x.child.isEmpty && minimizeTags) {
           // no children, so use short form: <xyz .../>
           sb.append("/>")
