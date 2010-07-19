@@ -7,7 +7,13 @@ import scala.util.control.Exception.ultimately
 object fixer {
   object constantconverter extends RewriteRule {
     override def transform(node: Node) = node match {
-      case n @ Elem(pre, "cn", att, scope, child@ _*) if n.attribute("type") == None => {
+      case n @ Elem(pre, "cn", attmp, scope, child@ _*) if n.attribute("type") == None => {
+        // We have to patch Attribute here, as Attribute.append makes use of getUniversalKey
+        val att = attmp match {
+          case n: WhiteSpace => new WhiteSpace(n.space, n.next) with whitespaceRootPatch;
+          case n: UnprefixedAttribute => new UnprefixedAttribute(n.key, n.value, n.next) with whitespaceRootPatch;
+          case n: PrefixedAttribute => new PrefixedAttribute(n.pre, n.key, n.value, n.next) with whitespaceRootPatch;
+        }
         // Split into elements and Text
         val nod = child.filter(b => b match {
           case Text(t) => false;
@@ -114,7 +120,7 @@ object fixer {
       toXML(f, pscope, sb, stripComments, decodeEntities, preserveWhitespace, minimizeTags)
       while (it.hasNext) {
         val x = it.next
-        sb.append(' ')
+        //sb.append(' ')
         toXML(x, pscope, sb, stripComments, decodeEntities, preserveWhitespace, minimizeTags)
       }
     }
@@ -124,7 +130,7 @@ object fixer {
     node.foreach(n => w.write(toXML(n, preserveWhitespace=true, minimizeTags=true).toString))
   }
   final def transformFile(file: String, rule: RewriteRule): Unit = {
-    val cpa = scala.xml.parsing.ConstructingParser.fromFile(new File(file), true)
+    val cpa = scala.xml.parsing.SpaceParser.fromFile(new File(file), true)
     var info_prolog: Tuple3[Option[String], Option[String], Option[Boolean]] = Tuple3(None, None, None)
     cpa.nextch // is prolog ?
     var children: NodeSeq = null
