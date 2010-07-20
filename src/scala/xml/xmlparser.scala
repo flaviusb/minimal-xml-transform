@@ -53,8 +53,8 @@ case class WhiteSpace(space: String, override val next: MetaData) extends MetaDa
   //override def buildString(sb: StringBuilder): StringBuilder = sb append space
   override def wellformed(scope: NamespaceBinding) = next.wellformed(scope)
 
-  def remove(key: String) = this
-  def remove(namespace: String, scope: NamespaceBinding, key: String) = this
+  def remove(key: String) = WhiteSpace(space, next.remove(key))
+  def remove(namespace: String, scope: NamespaceBinding, key: String) = WhiteSpace(space, next.remove(namespace, scope, key))
 }
 
 object WhiteSpace {

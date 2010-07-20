@@ -62,21 +62,41 @@ object fixer {
   }
   object xmlbaseremover extends RewriteRule {
     override def transform(node: Node) = node match {
-      case (elem: Elem) => {
-        val att = elem.attributes
-        // If there is an xml:base, then if it is "" or a file url, remove it
-        val base = att.get("xml", TopScope, "base")
-        if (base == None) {
-          elem
-        } else if (base != Some("")) {
-          val fileuri = "file:.*".r 
-          base.getOrElse("") match {
-            case fileuri() => elem.copy(attributes=att.remove("xml", TopScope, "base"))
-            case _ => elem
+      case (nod: Elem) => {
+        var mde = nod
+        // First remove xml:base, if present
+        // We have to do something stupid here, as Scala's support for removing a namespaced attribute is... shaky
+        def rem(at: MetaData, uri: String, scope: NamespaceBinding, key: String): MetaData = at match {
+          case p: PrefixedAttribute => {
+            if (scope.getURI(p.pre) == uri)
+              p.next;
+            else
+              if (p.next != null) {
+                p.copy(rem(p.next, uri, scope, key));
+              } else {
+                p
+              }
           }
-        } else {
-          elem.copy(attributes=att.remove("xml", TopScope, "base"))
+          case Null => Null
+          case _ => { if (at.next != null) at.copy(rem(at.next, uri, scope, key)); else at }
         }
+          
+        if (nod.attributes.get("http://www.w3.org/XML/1998/namespace", TopScope, "base").getOrElse(Text("nothing")).asInstanceOf[Text].toString == "")
+          mde = mde.copy(attributes=rem(nod.attributes, "http://www.w3.org/XML/1998/namespace", TopScope, "base"))
+        else if (nod.attributes.get("http://www.w3.org/XML/1998/namespace", TopScope, "base").getOrElse(Text("")).asInstanceOf[Text].toString.startsWith("file:"))
+          mde = mde.copy(attributes=rem(nod.attributes, "http://www.w3.org/XML/1998/namespace", TopScope, "base"))
+
+        // Time for some yak shaving; we must reverse the attribute list, as it is kept reversed at the moment in scala
+        def reverse(first: MetaData, next: MetaData): MetaData = {
+          // First time through is null, first
+          // Last time through is last, null
+          if (next == null || next == scala.xml.Null)
+            return first;
+
+          val intermediate = next.copy(first)
+          reverse(intermediate, next.next)
+        }
+        mde.copy(attributes=reverse(scala.xml.Null, mde.attributes))
       }
       case (otherwise: Node) => otherwise
     }
@@ -194,8 +214,37 @@ object fixer {
     ultimately(w.close())(write(w, fdoc))
   }
   def main(args: Array[String]) = {
-    for(file <- args) {
-      transformFile(file, constantconverter)
+    if (args.length == 0 || args(0) == "-h" || args(0) == "-?" || args(0) == "--help")
+      println(
+"""Usage: java -jar cellmlconverter.jar [-xe] file*
+  Converts cellml files in place
+  -x remove extraneous xml:base
+  -e transform old e-notation to new e-notation
+  """)
+    var x = false
+    var e = false
+    if (args.length > 1) {
+      if (args(0) == "-x" || args(0) == "-xe" || args(0) == "-ex")
+        x = true
+      if (args(0) == "-e" || args(0) == "-xe" || args(0) == "-ex")
+        e = true
     }
+    if (args.length > 2) {
+      if (args(1) == "-x" || args(1) == "-xe" || args(1) == "-ex")
+        x = true
+      if (args(1) == "-e" || args(1) == "-xe" || args(1) == "-ex")
+        e = true
+    }
+
+    args.foreach(file => {
+      if (!file.startsWith("-")) {
+        if (x) {
+          transformFile(file, xmlbaseremover);
+        }
+        if (e) {
+          transformFile(file, constantconverter);
+        }
+      } 
+    })
   }
 }
