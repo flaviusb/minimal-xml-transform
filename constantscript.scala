@@ -98,7 +98,10 @@ object fixer {
     )
     if (ns.parent != stop) {
       buildNSString(ns.parent, sb, stop)
-      sb append " "
+      ns.parent match {
+        case ws: NamespaceBindingS => sb append ws.space
+        case _ => sb append " "
+      }
     }
     sb append s
   }
@@ -124,6 +127,11 @@ object fixer {
         x.nameToString(sb)
         if (x.attributes ne null) buildAttrString(x.attributes, sb)
         buildNSString(x.scope, sb, pscope)
+        if (x.scope != pscope)
+          x.scope match {
+            case ns: NamespaceBindingS => sb append ns.space
+            case _ => 
+          }
         if (x.child.isEmpty && minimizeTags) {
           // no children, so use short form: <xyz .../>
           sb.append("/>")

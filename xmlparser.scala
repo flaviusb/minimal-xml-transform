@@ -15,6 +15,8 @@ import annotation.tailrec
 
 //import Utility.{ isNameStart }
 
+case class NamespaceBindingS(override val prefix: String, override val uri: String, override val parent: NamespaceBinding, space: String = " ") extends NamespaceBinding(prefix, uri, parent) { }
+
 /** Essentially, every method in here is a facade, delegating to next.
  *  It provides a backstop for the unusual collection defined by MetaData,
  *  sort of a linked list of tails.
