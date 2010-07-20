@@ -96,11 +96,11 @@ object fixer {
       (if (ns.prefix != null) ":" + ns.prefix else ""),
       (if (ns.uri != null) ns.uri else "")
     )
-    sb append s
     if (ns.parent != stop) {
-      sb append " "
       buildNSString(ns.parent, sb, stop)
+      sb append " "
     }
+    sb append s
   }
 
   def toXML(
