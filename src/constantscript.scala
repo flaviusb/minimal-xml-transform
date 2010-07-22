@@ -220,7 +220,7 @@ object fixer {
   Converts cellml files in place
   -x remove extraneous xml:base
   -e transform old e-notation to new e-notation
-  """)
+""")
     var x = false
     var e = false
     if (args.length > 1) {
