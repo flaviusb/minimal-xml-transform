@@ -146,7 +146,7 @@ object fixer {
         sb.append('<')
         x.nameToString(sb)
         if (x.attributes ne null) buildAttrString(x.attributes, sb)
-        buildNSString(x.scope, sb, pscope)
+        //buildNSString(x.scope, sb, pscope)
         if (x.scope != pscope)
           x.scope match {
             case ns: NamespaceBindingS => sb append ns.space

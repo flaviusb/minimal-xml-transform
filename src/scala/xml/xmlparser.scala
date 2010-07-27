@@ -15,7 +15,29 @@ import annotation.tailrec
 
 //import Utility.{ isNameStart }
 
-case class NamespaceBindingS(override val prefix: String, override val uri: String, override val parent: NamespaceBinding, space: String = " ") extends NamespaceBinding(prefix, uri, parent) { }
+case class NamespaceBindingS(override val prefix: String, override val uri: String, override val parent: NamespaceBinding, space: String = " ") extends NamespaceBinding(prefix, uri, parent) { 
+  override def getURI(_prefix: String): String =
+    if (prefix == _prefix) uri else {
+      if (parent == null)
+        { if (_prefix == "xml") "http://www.w3.org/XML/1998/namespace" else null: String }
+      else
+        parent getURI _prefix
+    }
+}
+// Need an analogous TopScopeS
+case object TopScopeS extends NamespaceBindingS(null, null, null, "") { 
+  import XML.{ xml, namespace }
+  
+  override def getURI(prefix1: String): String =
+    if (prefix1 == xml) namespace else null
+
+  override def getPrefix(uri1: String): String =
+    if (uri1 == namespace) xml else null
+
+  override def toString() = ""
+  override def buildString(stop: NamespaceBinding) = ""
+  override def buildString(sb: StringBuilder, ignore: NamespaceBinding) = {}
+}
 
 /** Essentially, every method in here is a facade, delegating to next.
  *  It provides a backstop for the unusual collection defined by MetaData,
@@ -60,6 +82,30 @@ case class WhiteSpace(space: String, override val next: MetaData) extends MetaDa
 object WhiteSpace {
   def apply(space: String, next: WhiteSpace) = next
 }
+
+//Unroll what should be a duck punch for RTTI reasons; replaces attributes used for xmlns
+class fakePrefixedAttribute(
+  override val pre: String,
+  override val key: String,
+  override val value: Seq[Node],
+  override val next: MetaData) extends PrefixedAttribute(pre, key, value, next) {
+  override def wellformed(scope: NamespaceBinding): Boolean = {
+    (next wellformed scope)
+  }
+  override def toString1(sb: StringBuilder): Unit = { }
+  override def toString1(): String = ""
+}
+class fakeUnprefixedAttribute(
+  override val key: String,
+  override val value: Seq[Node],
+  next1: MetaData) extends UnprefixedAttribute(key, value, next1) {
+  override def wellformed(scope: NamespaceBinding): Boolean = {
+    (next wellformed scope)
+  }
+  override def toString1(sb: StringBuilder): Unit = { }
+  override def toString1(): String = ""
+}
+
 trait whitespaceRootPatch {
   self: MetaData =>
   /**
