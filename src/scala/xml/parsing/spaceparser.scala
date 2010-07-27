@@ -49,8 +49,8 @@ class SpaceParser(override val input: Source, override val preserveWS: Boolean) 
       Utility.prefix(qname) match {
         case Some("xmlns") =>
           val prefix = qname.substring(6 /*xmlns:*/ , qname.length);
-          scope = new NamespaceBindingS(prefix, value, scope, space=(if(isSpace(ch)) {xSpaceS} else {""}));
-          aMap = WhiteSpace(scope.space, new fakePrefixedAttribute("xmlns", prefix, Text(value), aMap));
+          scope = new NamespaceBindingS(prefix, value, scope, space="");
+          aMap = new fakePrefixedAttribute("xmlns", prefix, Text(value), aMap);
         
         case Some(prefix)       => 
           val key = qname.substring(prefix.length+1, qname.length);
@@ -58,8 +58,8 @@ class SpaceParser(override val input: Source, override val preserveWS: Boolean) 
 
         case _             => 
           if( qname == "xmlns" ) {
-            scope = new NamespaceBindingS(null, value, scope, space=(if(isSpace(ch)) {xSpaceS} else {""}));
-            aMap = WhiteSpace(scope.space, new fakeUnprefixedAttribute("xmlns", Text(value), aMap))
+            scope = new NamespaceBindingS(null, value, scope, space="");
+            aMap = new fakeUnprefixedAttribute("xmlns", Text(value), aMap)
           } else 
             aMap = new UnprefixedAttribute(qname, Text(value), aMap);
       }
