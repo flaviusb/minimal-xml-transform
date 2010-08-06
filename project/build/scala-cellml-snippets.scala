@@ -22,7 +22,7 @@ class ScalaCellmlSnippets(info: ProjectInfo) extends DefaultProject(info)
     None
   }
   // For the moment, we embed the reponame, temporary directories, etc
-  private val repoName = "git@github.com:flaviusb/cellml-snippets.git"
+  private val repoName = "git@github.com:flaviusb/minimal-xml-transform.git"
   private val repoDir  = "cellml-snippets-gh-pages"
   private val mainDoc  = "constantconverter.html"
   lazy val initialize_gh_pages = task {
