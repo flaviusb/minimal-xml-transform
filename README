@@ -1,4 +1,0 @@
-Just a place to put some cellml related scripts. Unless otherwise noted, they are MIT licenced.
-
-The scala scripts are under src/
-Use sbt to build the scala e-notation converter.
