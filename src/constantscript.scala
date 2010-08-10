@@ -27,7 +27,7 @@ object fixer {
         val enot = """\W*([\-+]?[0-9]+(\.[0-9]+)?)[Ee]([\-+]?[0-9]+(\.[0-9]+)?)\W*""".r
         txt match {
           case enot(mantissa, _, exponent, _) => {
-            Elem(pre, n.label, new UnprefixedAttribute("type", "e-notation", WhiteSpace(" ", att)), scope, Text(mantissa) ++ Elem(n.prefix, "sep", null, n.scope) ++ Text(exponent) ++ nod: _*)
+            Elem(pre, n.label, new WhiteSpace(" ", new UnprefixedAttribute("type", "e-notation", att)), scope, Text(mantissa) ++ Elem(n.prefix, "sep", null, n.scope) ++ Text(exponent) ++ nod: _*)
           }
           case _ => n
         }
