@@ -25,7 +25,7 @@ object fixer {
           case a => false
         }).foldLeft("")((a, b) => a + b)
         val enot = """\W*([\-+]?[0-9]+(\.[0-9]+)?)[Ee]([\-+]?[0-9]+(\.[0-9]+)?)\W*""".r
-        val int = txt match {
+        txt match {
           case enot(mantissa, _, exponent, _) => {
             Elem(pre, n.label, new UnprefixedAttribute("type", "e-notation", WhiteSpace(" ", att)), scope, Text(mantissa) ++ Elem(n.prefix, "sep", null, n.scope) ++ Text(exponent) ++ nod: _*)
           }
@@ -57,9 +57,11 @@ object fixer {
         }
           
         if (nod.attributes.get("http://www.w3.org/XML/1998/namespace", TopScope, "base").getOrElse(Text("nothing")).asInstanceOf[Text].toString == "")
-          mde = mde.copy(attributes=rem(nod.attributes, "http://www.w3.org/XML/1998/namespace", TopScope, "base"))
+          mde.copy(attributes=rem(nod.attributes, "http://www.w3.org/XML/1998/namespace", TopScope, "base"))
         else if (nod.attributes.get("http://www.w3.org/XML/1998/namespace", TopScope, "base").getOrElse(Text("")).asInstanceOf[Text].toString.startsWith("file:"))
-          mde = mde.copy(attributes=rem(nod.attributes, "http://www.w3.org/XML/1998/namespace", TopScope, "base"))
+          mde.copy(attributes=rem(nod.attributes, "http://www.w3.org/XML/1998/namespace", TopScope, "base"))
+        else
+          mde;
       }
       case (otherwise: Node) => otherwise
     }
